@@ -55,7 +55,7 @@ export const useCategoryWheel = ({
       if (selectedCategory && !isRotating) {
         const selectedIndex = allCategories.indexOf(selectedCategory);
         if (selectedIndex !== -1) {
-          const angleForTopRight = -30; // Правый верхний угол
+          const angleForTopRight = -60; // Правый верхний угол
           const currentPosition =
             (selectedIndex / allCategories.length) * 360 + 60; // Текущая позиция в градусах
           const neededRotation = angleForTopRight - currentPosition;

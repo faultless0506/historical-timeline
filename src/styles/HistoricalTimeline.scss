@@ -431,8 +431,8 @@
 
   &__active-category {
     position: absolute;
-    top: -68px;
-    left: 110%;
+    top: -160px;
+    left:   90%;
     transform: translateX(-50%);
     padding: 8px 16px;
     border-radius: 4px;
@@ -480,8 +480,8 @@
       height: 256px;
     }
     &__active-category {
-      top: -36px;
-      left: calc(100% + 36px);
+      top: -44px;
+      left: 100%;
     }
     &__dot {
       &--active {
