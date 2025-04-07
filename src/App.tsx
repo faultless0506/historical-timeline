@@ -15,7 +15,7 @@ const App: React.FC = () => {
   return (
     <div className="app">
       <HistoricalTimeline periods={sortedPeriods} />
-      {/* <HistoricalTimeline periods={sortedPeriods} /> */}
+      <HistoricalTimeline periods={sortedPeriods} />
     </div>
   );
 };

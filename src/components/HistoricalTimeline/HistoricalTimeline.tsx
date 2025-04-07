@@ -197,27 +197,45 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
             breakpoints={{
               180: {
                 slidesPerView: 1,
-                spaceBetween: 20,
+                spaceBetween: 10,
+                pagination: {
+                  dynamicBullets: true,
+                },
               },
               320: {
-                slidesPerView: 1.5,
+                slidesPerView: 1.2,
                 spaceBetween: 10,
+                pagination: {
+                  dynamicBullets: true,
+                },
               },
               480: {
                 slidesPerView: 1.5,
                 spaceBetween: 15,
+                pagination: {
+                  dynamicBullets: true,
+                },
               },
               768: {
                 slidesPerView: 2,
                 spaceBetween: 15,
+                pagination: {
+                  dynamicBullets: false,
+                },
               },
               1024: {
                 slidesPerView: 3,
                 spaceBetween: 20,
+                pagination: {
+                  dynamicBullets: false,
+                },
               },
               1280: {
                 slidesPerView: 4,
                 spaceBetween: 20,
+                pagination: {
+                  dynamicBullets: false,
+                },
               },
             }}
             className="historical-timeline__swiper"
