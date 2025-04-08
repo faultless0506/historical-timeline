@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { HistoricalTimelineProps, Period, HistoricalEvent } from "./types";
 import { useCategoryWheel } from "../hooks/useCategoryWheel";
 import { usePeriods } from "../hooks/usePeriods";
+import { useEventsAnimation } from "../hooks/useEventsAnimation";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -14,7 +15,7 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
   periods,
   className = "",
 }) => {
-  const [currentEventIndex, setCurrentEventIndex] = useState<number>(0);
+  // const [currentEventIndex, setCurrentEventIndex] = useState<number>(0);
 
   const allCategories = useMemo(() => {
     const uniqueCategories = new Set<string>();
@@ -44,10 +45,8 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
     endYearRef,
     handlePrevPeriod,
     handleNextPeriod,
-    setActivePeriodIndex,
   } = usePeriods({
     periods,
-    onPeriodChange: () => setCurrentEventIndex(0),
   });
 
   // Фильтруем события по выбранной категории
@@ -62,24 +61,30 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
   }, [activePeriod, selectedCategory]);
 
   // Сбрасываем индекс события при изменении категории
-  useEffect(() => {
-    setCurrentEventIndex(0);
-  }, [selectedCategory]);
+  // useEffect(() => {
+  //   setCurrentEventIndex(0);
+  // }, [selectedCategory]);
 
-  const swiperRef = useRef<any>(null);
-
-  // Сбрасываем позицию слайдера при изменении периода или категории
-  useEffect(() => {
-    if (swiperRef.current && swiperRef.current.swiper) {
-      swiperRef.current.swiper.slideTo(0, 0);
-    }
-  }, [activePeriodIndex, selectedCategory]);
+  // Используем хук для анимации событий
+  const {
+    swiperRef,
+    swiperContainerRef,
+    displayEvents,
+    swiperKey,
+    activeSlide,
+    totalSlides,
+    handleSlideChange,
+    handleSwiperInit,
+    handlePaginationClick,
+  } = useEventsAnimation({
+    filteredEvents,
+  });
 
   // Используем хук для работы с колесом категорий
   const {
     isRotating,
     visibleCategory,
-    isCategoryChanging,
+    // isCategoryChanging,
     categoryRef,
     dotsRef,
     circleRef,
@@ -172,90 +177,83 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
         <div className="historical-timeline__events">
           <div className="historical-timeline__slider-prev"></div>
           <div className="historical-timeline__slider-next"></div>
-          <Swiper
-            modules={[Navigation, Pagination]}
-            slidesPerView={4}
-            spaceBetween={20}
-            navigation={{
-              prevEl: ".historical-timeline__slider-prev",
-              nextEl: ".historical-timeline__slider-next",
-            }}
-            pagination={{
-              clickable: true,
-              type: "bullets",
-              el: ".historical-timeline__pagination",
-              bulletClass: "historical-timeline__pagination-bullet",
-              bulletActiveClass:
-                "historical-timeline__pagination-bullet--active",
-              renderBullet: function (index, className) {
-                return `<span class="${className}"></span>`;
-              },
-            }}
-            onSlideChange={(swiper) => setCurrentEventIndex(swiper.activeIndex)}
-            initialSlide={0}
-            key={`${activePeriodIndex}-${selectedCategory}`}
-            breakpoints={{
-              180: {
-                slidesPerView: 1,
-                spaceBetween: 10,
-                pagination: {
-                  dynamicBullets: true,
-                },
-              },
-              320: {
-                slidesPerView: 1.2,
-                spaceBetween: 10,
-                pagination: {
-                  dynamicBullets: true,
-                },
-              },
-              480: {
-                slidesPerView: 1.5,
-                spaceBetween: 15,
-                pagination: {
-                  dynamicBullets: true,
-                },
-              },
-              768: {
-                slidesPerView: 2,
-                spaceBetween: 15,
-                pagination: {
-                  dynamicBullets: false,
-                },
-              },
-              1024: {
-                slidesPerView: 3,
-                spaceBetween: 20,
-                pagination: {
-                  dynamicBullets: false,
-                },
-              },
-              1280: {
-                slidesPerView: 4,
-                spaceBetween: 20,
-                pagination: {
-                  dynamicBullets: false,
-                },
-              },
-            }}
-            className="historical-timeline__swiper"
-            ref={swiperRef}
+          <div
+            ref={swiperContainerRef}
+            className="historical-timeline__swiper-container"
           >
-            {filteredEvents.map((event: HistoricalEvent) => (
-              <SwiperSlide key={event.id}>
-                <div className="historical-timeline__event">
-                  <div className="historical-timeline__event-year">
-                    {event.year}
+            <Swiper
+              key={swiperKey}
+              modules={[Navigation, Pagination]}
+              slidesPerView={4}
+              spaceBetween={20}
+              navigation={{
+                prevEl: ".historical-timeline__slider-prev",
+                nextEl: ".historical-timeline__slider-next",
+              }}
+              onSlideChange={(swiper) => {
+                handleSlideChange(swiper);
+              }}
+              onSwiper={handleSwiperInit}
+              initialSlide={0}
+              breakpoints={{
+                180: {
+                  slidesPerView: 1,
+                  spaceBetween: 20,
+                },
+                320: {
+                  slidesPerView: 1.5,
+                  spaceBetween: 10,
+                },
+                480: {
+                  slidesPerView: 1.5,
+                  spaceBetween: 15,
+                },
+                768: {
+                  slidesPerView: 2,
+                  spaceBetween: 15,
+                },
+                1024: {
+                  slidesPerView: 3,
+                  spaceBetween: 20,
+                },
+                1280: {
+                  slidesPerView: 4,
+                  spaceBetween: 20,
+                },
+              }}
+              className="historical-timeline__swiper"
+              ref={swiperRef}
+            >
+              {displayEvents.map((event: HistoricalEvent) => (
+                <SwiperSlide key={event.id}>
+                  <div className="historical-timeline__event">
+                    <div className="historical-timeline__event-year">
+                      {event.year}
+                    </div>
+                    <div className="historical-timeline__event-description">
+                      {event.description}
+                    </div>
                   </div>
-                  <div className="historical-timeline__event-description">
-                    {event.description}
-                  </div>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
         </div>
-        <div className="historical-timeline__pagination"></div>
+        <div className="historical-timeline__pagination-container">
+          <div className="historical-timeline__pagination">
+            {Array.from({ length: totalSlides }).map((_, index) => (
+              <span
+                key={index}
+                className={`historical-timeline__pagination-bullet ${
+                  index === activeSlide
+                    ? "historical-timeline__pagination-bullet--active"
+                    : ""
+                }`}
+                onClick={() => handlePaginationClick(index)}
+              ></span>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

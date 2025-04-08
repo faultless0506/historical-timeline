@@ -3,8 +3,6 @@ import HistoricalTimeline from "./components/HistoricalTimeline";
 import { Period } from "./components/HistoricalTimeline/types";
 import { mockPeriods } from "./mockData";
 
-// Моковые данные для демонстрации (от новых к старым)
-
 
 const App: React.FC = () => {
   // Переворачиваем массив периодов, чтобы они отображались в порядке от старых к новым
@@ -15,7 +13,7 @@ const App: React.FC = () => {
   return (
     <div className="app">
       <HistoricalTimeline periods={sortedPeriods} />
-      <HistoricalTimeline periods={sortedPeriods} />
+      {/* <HistoricalTimeline periods={sortedPeriods} /> */}
     </div>
   );
 };
