@@ -10,6 +10,11 @@ interface UsePeriodsProps {
 /**
  * Хук для управления историческими периодами
  * Обеспечивает переключение между периодами и анимацию изменения годов
+ *
+ * @param {UsePeriodsProps} props - Свойства хука
+ * @param {Period[]} props.periods - Массив исторических периодов
+ * @param {() => void} [props.onPeriodChange] - Колбэк при изменении периода
+ * @returns {Object} Объект с состояниями и методами для управления периодами
  */
 export const usePeriods = ({ periods, onPeriodChange }: UsePeriodsProps) => {
   // Основные состояния для работы с периодами
@@ -31,11 +36,11 @@ export const usePeriods = ({ periods, onPeriodChange }: UsePeriodsProps) => {
   const totalPeriods = periods.length;
 
   /**
-   * Анимирует изменение года по одной цифре
-   * @param from - начальное значение года
-   * @param to - конечное значение года
-   * @param setter - функция установки состояния
-   * @param ref - ссылка на DOM-элемент
+   * Анимирует изменение года с использованием GSAP
+   * @param {number} from - Начальное значение года
+   * @param {number} to - Конечное значение года
+   * @param {React.Dispatch<React.SetStateAction<number>>} setter - Функция установки состояния
+   * @param {React.RefObject<HTMLDivElement | null>} ref - Ссылка на DOM-элемент
    */
   const animateYearChange = (
     from: number,
@@ -45,25 +50,32 @@ export const usePeriods = ({ periods, onPeriodChange }: UsePeriodsProps) => {
   ): void => {
     if (from === to) return;
 
+    const duration = 0.3; // Длительность анимации в секундах
+    const steps = Math.abs(to - from);
+    const stepDuration = duration / steps;
+
+    let currentValue = from;
     const isIncreasing = to > from;
 
-    /**
-     * Функция для анимации одного шага изменения года
-     * @param currentValue - текущее значение года
-     */
-    const animateStep = (currentValue: number): void => {
-      if (currentValue === to) return;
+    const timeline = gsap.timeline({
+      onUpdate: () => {
+        setter(Math.round(currentValue));
+      },
+      onComplete: () => {
+        setter(to);
+      },
+    });
 
-      const nextValue = isIncreasing ? currentValue + 1 : currentValue - 1;
-
-      setter(nextValue);
-
-      if (nextValue !== to) {
-        setTimeout(() => animateStep(nextValue), 100);
+    timeline.to(
+      {},
+      {
+        duration: duration,
+        onUpdate: () => {
+          const progress = timeline.progress();
+          currentValue = from + (to - from) * progress;
+        },
       }
-    };
-
-    animateStep(from);
+    );
   };
 
   /**
@@ -87,7 +99,7 @@ export const usePeriods = ({ periods, onPeriodChange }: UsePeriodsProps) => {
         endYearRef
       );
     }
-  }, [activePeriod, displayStartYear, displayEndYear]);
+  }, [activePeriod]);
 
   /**
    * Переключение на предыдущий период
