@@ -1242,7 +1242,7 @@ export const mockPeriods: Period[] = [
           id: 601,
           year: 1990,
           category: "Наука",
-          description: "Запуск космического телескопа Хаббл (Hubble) Запуск космического телескопа Хаббл (Hubble) Запуск космического телескопа Хаббл (Hubble)",
+          description: "Запуск космического телескопа Хаббл (Hubble)",
         },
         {
           id: 602,

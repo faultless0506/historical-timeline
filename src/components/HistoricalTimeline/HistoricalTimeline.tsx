@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
-import gsap from "gsap";
-import { HistoricalTimelineProps, Period, HistoricalEvent } from "./types";
+import { HistoricalTimelineProps, HistoricalEvent } from "./types";
 import { useCategoryWheel } from "../hooks/useCategoryWheel";
 import { usePeriods } from "../hooks/usePeriods";
 import { useEventsAnimation } from "../hooks/useEventsAnimation";
@@ -11,12 +10,22 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "../../styles/HistoricalTimeline.scss";
 
-const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
+/**
+ * Компонент исторической временной шкалы
+ * Отображает периоды истории и события в них с возможностью
+ * фильтрации по категориям и переключения между периодами
+ *
+ * @param {HistoricalTimelineProps} props - Свойства компонента
+ * @param {Period[]} props.periods - Массив исторических периодов
+ * @param {string} [props.className=""] - Дополнительные CSS классы
+ * @returns {React.ReactElement} - Компонент исторической временной шкалы
+ */
+const HistoricalTimeline = ({
   periods,
   className = "",
-}) => {
-  // const [currentEventIndex, setCurrentEventIndex] = useState<number>(0);
-
+}: HistoricalTimelineProps): React.ReactElement => {
+  // Извлекаем все уникальные категории из событий всех периодов
+  // на всякий случай для защиты верстки ограничим 6 элементами
   const allCategories = useMemo(() => {
     const uniqueCategories = new Set<string>();
     periods.forEach((period) => {
@@ -26,14 +35,15 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
         }
       });
     });
-    return Array.from(uniqueCategories);
+    return Array.from(uniqueCategories).slice(0, 6);
   }, [periods]);
 
+  // Состояние выбранной категории, начальное значение - первая категория
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
     allCategories[0] || null
   );
 
-  // Используем хук для работы с периодами
+  // Хук для управления периодами (переключение, анимация годов)
   const {
     activePeriodIndex,
     activePeriod,
@@ -45,11 +55,9 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
     endYearRef,
     handlePrevPeriod,
     handleNextPeriod,
-  } = usePeriods({
-    periods,
-  });
+  } = usePeriods({ periods });
 
-  // Фильтруем события по выбранной категории
+  // Фильтрация событий активного периода по выбранной категории
   const filteredEvents = useMemo(() => {
     if (!selectedCategory) return activePeriod?.events || [];
 
@@ -60,12 +68,7 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
     );
   }, [activePeriod, selectedCategory]);
 
-  // Сбрасываем индекс события при изменении категории
-  // useEffect(() => {
-  //   setCurrentEventIndex(0);
-  // }, [selectedCategory]);
-
-  // Используем хук для анимации событий
+  // Хук для анимации событий при изменении фильтров или периода
   const {
     swiperRef,
     swiperContainerRef,
@@ -80,11 +83,10 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
     filteredEvents,
   });
 
-  // Используем хук для работы с колесом категорий
+  // Хук для управления колесом выбора категорий
   const {
     isRotating,
     visibleCategory,
-    // isCategoryChanging,
     categoryRef,
     dotsRef,
     circleRef,
@@ -95,15 +97,22 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
     onCategoryChange: setSelectedCategory,
   });
 
+  // Форматирование номера периода для отображения (01/03)
+  const formattedPeriodIndex = String(activePeriodIndex + 1).padStart(2, "0");
+  const formattedTotalPeriods = String(totalPeriods).padStart(2, "0");
+
   return (
     <div className="historical-timeline-container">
       <div className={`historical-timeline ${className}`}>
+        {/* Заголовок */}
         <div className="historical-timeline__header">
           <h2 className="historical-timeline__title">
             Исторические
             <br /> даты
           </h2>
         </div>
+
+        {/* Колесо выбора категорий */}
         <div className="historical-timeline__circle-container">
           {visibleCategory && (
             <div
@@ -130,7 +139,9 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
               ))}
             </div>
           </div>
-        </div>{" "}
+        </div>
+
+        {/* Годы периода */}
         <div className="historical-timeline__years" ref={yearsRef}>
           <div className="historical-timeline__years-container">
             <div
@@ -148,16 +159,18 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Управление периодами */}
         <div className="historical-timeline__controls">
           <div className="historical-timeline__controls-counter">
-            {String(activePeriodIndex + 1).padStart(2, "0")}/
-            {String(totalPeriods).padStart(2, "0")}
+            {formattedPeriodIndex}/{formattedTotalPeriods}
           </div>
           <div className="historical-timeline__controls-buttons">
             <button
               className="historical-timeline__controls-button"
               onClick={handlePrevPeriod}
               disabled={activePeriodIndex === 0}
+              aria-label="Предыдущий период"
             >
               <svg viewBox="0 0 8 12">
                 <path d="M7.41 10.59L2.83 6l4.58-4.59L6 0 0 6l6 6z" />
@@ -167,6 +180,7 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
               className="historical-timeline__controls-button"
               onClick={handleNextPeriod}
               disabled={activePeriodIndex === periods.length - 1}
+              aria-label="Следующий период"
             >
               <svg viewBox="0 0 8 12">
                 <path d="M1.41 0L6 4.59 1.41 9.17 3 10.59 9 4.59 3 0z" />
@@ -174,6 +188,8 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Слайдер событий */}
         <div className="historical-timeline__events">
           <div className="historical-timeline__slider-prev"></div>
           <div className="historical-timeline__slider-next"></div>
@@ -190,9 +206,7 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
                 prevEl: ".historical-timeline__slider-prev",
                 nextEl: ".historical-timeline__slider-next",
               }}
-              onSlideChange={(swiper) => {
-                handleSlideChange(swiper);
-              }}
+              onSlideChange={handleSlideChange}
               onSwiper={handleSwiperInit}
               initialSlide={0}
               breakpoints={{
@@ -224,7 +238,7 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
               className="historical-timeline__swiper"
               ref={swiperRef}
             >
-              {displayEvents.map((event: HistoricalEvent) => (
+              {displayEvents.map((event) => (
                 <SwiperSlide key={event.id}>
                   <div className="historical-timeline__event">
                     <div className="historical-timeline__event-year">
@@ -239,6 +253,8 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
             </Swiper>
           </div>
         </div>
+
+        {/* Пагинация слайдера */}
         <div className="historical-timeline__pagination-container">
           <div className="historical-timeline__pagination">
             {Array.from({ length: totalSlides }).map((_, index) => (
@@ -250,6 +266,7 @@ const HistoricalTimeline: React.FC<HistoricalTimelineProps> = ({
                     : ""
                 }`}
                 onClick={() => handlePaginationClick(index)}
+                aria-label={`Слайд ${index + 1}`}
               ></span>
             ))}
           </div>
